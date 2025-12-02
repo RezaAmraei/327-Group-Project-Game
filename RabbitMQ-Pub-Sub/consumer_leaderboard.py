@@ -15,5 +15,5 @@ def on_msg(ch, method, props, body):
 channel.basic_qos(prefetch_count=10)
 channel.basic_consume(queue="leaderboard-worker", on_message_callback=on_msg, auto_ack=False)
 
-print("listening on leaderboard-worker ... (Crtl + C to stop this)")
+print("listening on leaderboard worker")
 channel.start_consuming()
