@@ -10,7 +10,19 @@ channel = connection.channel()
 
 #declaring an exchange
 channel.exchange_declare(exchange='game.events', exchange_type='topic', durable=True)
+lamport = 0
+def tick():
+    global lamport
+    lamport+=1
+    return lamport
 
+
+def publish_event(routing_key,payload):
+    lamport_ts = tick()
+    payload["lamport"] = lamport_ts
+    
+    channel.basic_publish(exchange='game.events',routing_key=routing_key,body=json.dumps(payload))
+    print(f"[PUBLISH] rk='{routing_key}' lamport={lamport_ts} body={payload}")
 msg = {
     "type": "match.ready",
     "matchId": "demo-1",
@@ -18,8 +30,8 @@ msg = {
  }
 
 #sending publishing to routing key of "game.events" with the message we created
-channel.basic_publish(exchange='game.events', routing_key='match.ready', body=json.dumps(msg))
-print("Published match.ready")
+publish_event("match.ready", msg)
+
 
 ended = {
     "type": "match.ended", 
@@ -29,12 +41,7 @@ ended = {
     "timestamp": int(time.time())
 }
 
-channel.basic_publish(
-    exchange="game.events",
-    routing_key="match.ended",
-    body=json.dumps(ended)
-)
-
+publish_event("match.ended", ended)
 print("Published match.ended")
 #close connection after everything is done
 connection.close()
